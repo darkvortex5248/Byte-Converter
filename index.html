@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Byte converter | C# ↔ C++ ↔ Python</title>
+  <!-- Font Awesome 6 for premium icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔁</text></svg>">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', 'Arial', sans-serif;
+      background: radial-gradient(circle at 20% 10%, #1a1a2e, #0a0a14);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+      color: #e0e0e0;
+      position: relative;
+    }
+
+    /* animated background glow */
+    body::before {
+      content: "";
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: conic-gradient(from 0deg, #ff3c3c20, #00ff9c20, #3c8aff20, #ff3c3c20);
+      animation: rotateGlow 20s linear infinite;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    @keyframes rotateGlow {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .glass-panel {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 850px;
+      background: rgba(20, 20, 35, 0.7);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 48px;
+      padding: 35px 30px 40px;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 60, 60, 0.3), 0 0 30px rgba(0, 255, 156, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    .glass-panel:hover {
+      box-shadow: 0 35px 70px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 60, 60, 0.5), 0 0 50px rgba(0, 255, 156, 0.4);
+    }
+
+    h1 {
+      font-size: 3.2rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, #ff3c3c, #ff8c3c, #00ff9c);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 2px;
+      filter: drop-shadow(0 0 15px #ff3c3c80);
+      text-transform: uppercase;
+      word-break: break-word;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 1.2rem;
+      color: #b0b0d0;
+      margin-bottom: 35px;
+      font-weight: 400;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      letter-spacing: 0.5px;
+    }
+
+    .subtitle i {
+      color: #ffaa00;
+      font-size: 1.4rem;
+    }
+
+    .converter-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .textarea-wrapper {
+      position: relative;
+      margin-bottom: 5px;
+    }
+
+    .textarea-wrapper i {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      color: #ff3c3c;
+      font-size: 1.3rem;
+      opacity: 0.9;
+      z-index: 3;
+    }
+
+    textarea {
+      width: 100%;
+      height: 130px;
+      padding: 18px 20px 18px 50px;
+      font-size: 1rem;
+      font-family: 'Fira Code', 'Courier New', monospace;
+      background: rgba(10, 10, 20, 0.7);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 28px;
+      color: #00ff9c;
+      resize: vertical;
+      outline: none;
+      transition: all 0.25s ease;
+      letter-spacing: 0.3px;
+      line-height: 1.5;
+      box-shadow: inset 0 4px 12px rgba(0,0,0,0.6);
+    }
+
+    textarea:focus {
+      border-color: #ff3c3c;
+      box-shadow: 0 0 20px #ff3c3c60, inset 0 2px 8px black;
+      background: rgba(15, 15, 30, 0.8);
+    }
+
+    textarea::placeholder {
+      color: #6a6a8a;
+      font-style: italic;
+      font-size: 0.95rem;
+    }
+
+    .button-panel {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      margin: 18px 0 8px;
+    }
+
+    .btn {
+      padding: 14px 24px;
+      border-radius: 40px;
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: 0.8px;
+      background: rgba(20, 20, 35, 0.8);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #f0f0f0;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.5);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn i {
+      font-size: 1.2rem;
+      transition: transform 0.2s;
+    }
+
+    .btn:hover {
+      transform: translateY(-3px);
+      border-color: #ff3c3c;
+      box-shadow: 0 15px 25px rgba(255, 60, 60, 0.4);
+      background: rgba(30, 30, 50, 0.9);
+    }
+
+    .btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 5px 12px black;
+    }
+
+    /* special gradient buttons */
+    .btn.cpp-cs {
+      border-left: 4px solid #ff8c3c;
+    }
+    .btn.cs-python {
+      border-left: 4px solid #3c8aff;
+    }
+    .btn.cpp-python {
+      border-left: 4px solid #aa3cff;
+    }
+
+    .swap-icon {
+      font-size: 2rem;
+      color: #ffaa00;
+      filter: drop-shadow(0 0 8px orange);
+      margin: 0 8px;
+    }
+
+    .output-area {
+      margin-top: 5px;
+    }
+
+    .copy-btn {
+      background: transparent;
+      border: 1px solid #444;
+      color: #ccc;
+      padding: 12px 20px;
+      margin: 8px auto 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: bold;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: 0.2s;
+      font-size: 0.9rem;
+      background: rgba(0,0,0,0.4);
+    }
+
+    .copy-btn:hover {
+      background: #ff3c3c20;
+      border-color: #ff3c3c;
+      color: white;
+    }
+
+    .footer-note {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.9rem;
+      color: #9a9ab0;
+    }
+
+    @media (max-width: 600px) {
+      .glass-panel {
+        padding: 20px 15px;
+      }
+      h1 {
+        font-size: 2.3rem;
+      }
+      .btn {
+        padding: 12px 16px;
+        font-size: 0.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="glass-panel">
+    <h1>⚡Byte converter ⚡</h1>
+    <div class="subtitle">
+      <i class="fas fa-code"></i> C# <span style="color:#ff8c3c;">↔</span> C++ <span style="color:#ff8c3c;">↔</span> Python <i class="fas fa-code"></i>
+    </div>
+
+    <div class="converter-grid">
+      <!-- INPUT SECTION -->
+      <div class="textarea-wrapper">
+        <i class="fas fa-paste"></i>
+        <textarea id="inputBytes" placeholder="Paste the bytes here... for example: 0x41, 0x42 or 41 42..."></textarea>
+      </div>
+
+      <!-- BUTTONS GROUP (6 conversions) -->
+      <div class="button-panel">
+        <button class="btn cpp-cs" onclick="convert('cppToCs')"><i class="fab fa-cuttlefish"></i> C++ → C#</button>
+        <button class="btn cs-python" onclick="convert('csToPython')"><i class="fab fa-microsoft"></i> C# → Python</button>
+        <button class="btn cs-python" onclick="convert('csToCpp')"><i class="fab fa-microsoft"></i> C# → C++</button>
+      </div>
+      <div class="button-panel" style="margin-top: 0;">
+        <button class="btn cpp-python" onclick="convert('cppToPython')"><i class="fab fa-cuttlefish"></i> C++ → Python</button>
+        <button class="btn cpp-python" onclick="convert('pythonToCs')"><i class="fab fa-python"></i> Python → C#</button>
+        <button class="btn cpp-cs" onclick="convert('pythonToCpp')"><i class="fab fa-python"></i> Python → C++</button>
+      </div>
+
+      <!-- OUTPUT SECTION -->
+      <div class="textarea-wrapper output-area">
+        <i class="fas fa-terminal"></i>
+        <textarea id="outputBytes" placeholder="The results will be shown here..." readonly></textarea>
+      </div>
+      
+      <button class="copy-btn" onclick="copyOutput()">
+        <i class="far fa-copy"></i> copy
+      </button>
+    </div>
+    <div class="footer-note">
+      <i class="fas fa-shield-alt"></i> Premium Byte Converter • All formats supported
+    </div>
+  </div>
+
+  <script>
+    // Helper: clean and normalize input bytes to array of hex strings (no "0x")
+    function parseBytesToHexArray(inputStr) {
+      if (!inputStr || !inputStr.trim()) return [];
+      // Remove all "0x" or "0X" prefixes, replace commas with spaces
+      let cleaned = inputStr.replace(/0x/gi, '').replace(/,/g, ' ').trim();
+      // Split by whitespace and filter empties
+      let tokens = cleaned.split(/\s+/).filter(t => t !== '');
+      // Optionally validate hex (but keep as-is for flexibility)
+      return tokens.map(t => t.toUpperCase());
+    }
+
+    // Convert hex array to C++ style: "0x41, 0x42"
+    function toCppStyle(hexArray) {
+      return hexArray.map(h => '0x' + h).join(', ');
+    }
+
+    // Convert hex array to C# style: space separated uppercase hex (no 0x)
+    function toCsStyle(hexArray) {
+      return hexArray.join(' ');
+    }
+
+    // Convert hex array to Python bytes literal: b'\x41\x42'
+    function toPythonStyle(hexArray) {
+      if (hexArray.length === 0) return "b''";
+      let pythonStr = "b'";
+      for (let h of hexArray) {
+        // ensure two-digit hex representation with escape
+        let byteVal = parseInt(h, 16);
+        if (isNaN(byteVal)) continue; // skip invalid
+        // Use \x escape for all bytes (even printable, consistent)
+        pythonStr += '\\x' + h.padStart(2, '0').toLowerCase();
+      }
+      pythonStr += "'";
+      return pythonStr;
+    }
+
+    // Also need to parse Python style input back to hex array (for Python→others)
+    function parsePythonToHexArray(inputStr) {
+      if (!inputStr || !inputStr.trim()) return [];
+      let s = inputStr.trim();
+      // Remove b' ... ' or b" ... " or just string with \x
+      let match = s.match(/b?['"](.*)['"]$/);
+      let content = match ? match[1] : s;
+      // Find all \x?? patterns
+      let hexVals = [];
+      let regex = /\\x([0-9a-fA-F]{2})/g;
+      let m;
+      while ((m = regex.exec(content)) !== null) {
+        hexVals.push(m[1].toUpperCase());
+      }
+      // Also support space-separated hex inside python? rare, but fallback to generic parse
+      if (hexVals.length === 0) {
+        // treat as normal hex tokens
+        return parseBytesToHexArray(inputStr);
+      }
+      return hexVals;
+    }
+
+    // Master conversion function
+    function convert(direction) {
+      const inputField = document.getElementById('inputBytes');
+      const outputField = document.getElementById('outputBytes');
+      const rawInput = inputField.value.trim();
+      
+      if (rawInput === '') {
+        outputField.value = '⚠️ Please input bytes!';
+        return;
+      }
+
+      let hexArray = [];
+
+      // Determine input format based on direction source
+      if (direction === 'pythonToCs' || direction === 'pythonToCpp') {
+        // Input treated as Python style
+        hexArray = parsePythonToHexArray(rawInput);
+      } else {
+        // Default: treat as generic hex/C#/C++ style (0x or space separated)
+        hexArray = parseBytesToHexArray(rawInput);
+      }
+
+      if (hexArray.length === 0) {
+        outputField.value = '❌ No valid bytes found!';
+        return;
+      }
+
+      let result = '';
+
+      switch (direction) {
+        case 'cppToCs':
+          result = toCsStyle(hexArray);
+          break;
+        case 'csToCpp':
+          result = toCppStyle(hexArray);
+          break;
+        case 'csToPython':
+          result = toPythonStyle(hexArray);
+          break;
+        case 'cppToPython':
+          result = toPythonStyle(hexArray);
+          break;
+        case 'pythonToCs':
+          result = toCsStyle(hexArray);
+          break;
+        case 'pythonToCpp':
+          result = toCppStyle(hexArray);
+          break;
+        default:
+          result = 'Unknown conversion';
+      }
+
+      outputField.value = result;
+    }
+
+    // Copy output to clipboard
+    function copyOutput() {
+      const outputField = document.getElementById('outputBytes');
+      const text = outputField.value;
+      if (!text || text.startsWith('⚠️') || text.startsWith('❌')) {
+        alert('There are no results to copy!');
+        return;
+      }
+      navigator.clipboard.writeText(text).then(() => {
+        // Visual feedback
+        const copyBtn = document.querySelector('.copy-btn');
+        copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        setTimeout(() => {
+          copyBtn.innerHTML = '<i class="far fa-copy"></i> copy';
+        }, 2000);
+      }).catch(() => {
+        alert('Copy failed. Copy manually।');
+      });
+    }
+
+    // Additional: allow Enter key in input to trigger first conversion as example (optional)
+    document.getElementById('inputBytes').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && e.ctrlKey) {
+        e.preventDefault();
+        convert('cppToCs'); // default quick convert
+      }
+    });
+
+    // Set initial placeholder example
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('inputBytes').value = '0x48, 0x65, 0x6C, 0x6C, 0x6F';
+      // Auto run one conversion to show
+      convert('cppToCs');
+    });
+  </script>
+</body>
+</html>
