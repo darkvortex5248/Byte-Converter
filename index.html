@@ -1,457 +1,1795 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>Byte converter | C# ↔ C++ ↔ Python</title>
-  <!-- Font Awesome 6 for premium icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔁</text></svg>">
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ByteForge — Advanced Byte Converter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700;800&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+<style>
+  :root {
+    --bg-deep: #020408;
+    --bg-panel: rgba(6, 14, 28, 0.92);
+    --bg-card: rgba(8, 18, 36, 0.85);
+    --accent-primary: #00d4ff;
+    --accent-secondary: #ff6b35;
+    --accent-green: #00ff88;
+    --accent-purple: #b347ff;
+    --accent-yellow: #ffd700;
+    --text-primary: #e8f4ff;
+    --text-secondary: #7a9bb5;
+    --text-dim: #3a5a7a;
+    --border: rgba(0, 212, 255, 0.15);
+    --border-active: rgba(0, 212, 255, 0.6);
+    --glow-blue: 0 0 20px rgba(0,212,255,0.4);
+    --glow-orange: 0 0 20px rgba(255,107,53,0.4);
+    --glow-green: 0 0 20px rgba(0,255,136,0.4);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
 
-    body {
-      font-family: 'Segoe UI', 'Arial', sans-serif;
-      background: radial-gradient(circle at 20% 10%, #1a1a2e, #0a0a14);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 30px;
-      color: #e0e0e0;
-      position: relative;
-    }
+  * { margin:0; padding:0; box-sizing:border-box; }
 
-    /* animated background glow */
-    body::before {
-      content: "";
-      position: fixed;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: conic-gradient(from 0deg, #ff3c3c20, #00ff9c20, #3c8aff20, #ff3c3c20);
-      animation: rotateGlow 20s linear infinite;
-      z-index: 0;
-      pointer-events: none;
-    }
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg-deep);
+    min-height: 100vh;
+    color: var(--text-primary);
+    overflow-x: hidden;
+    position: relative;
+  }
 
-    @keyframes rotateGlow {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    z-index: 0;
+    pointer-events: none;
+  }
 
-    .glass-panel {
-      position: relative;
-      z-index: 2;
-      width: 100%;
-      max-width: 850px;
-      background: rgba(20, 20, 35, 0.7);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 48px;
-      padding: 35px 30px 40px;
-      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 60, 60, 0.3), 0 0 30px rgba(0, 255, 156, 0.2);
-      transition: all 0.3s ease;
-    }
+  /* Floating orbs */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+    animation: drift 15s ease-in-out infinite;
+  }
+  .orb-1 { width:400px; height:400px; background:rgba(0,212,255,0.06); top:-100px; left:-100px; animation-delay:0s; }
+  .orb-2 { width:300px; height:300px; background:rgba(255,107,53,0.06); bottom:-50px; right:-50px; animation-delay:-5s; }
+  .orb-3 { width:250px; height:250px; background:rgba(179,71,255,0.05); top:50%; left:50%; animation-delay:-10s; }
 
-    .glass-panel:hover {
-      box-shadow: 0 35px 70px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 60, 60, 0.5), 0 0 50px rgba(0, 255, 156, 0.4);
-    }
+  @keyframes drift {
+    0%,100% { transform: translate(0,0); }
+    33% { transform: translate(30px,-20px); }
+    66% { transform: translate(-20px,30px); }
+  }
 
-    h1 {
-      font-size: 3.2rem;
-      font-weight: 700;
-      text-align: center;
-      margin-bottom: 12px;
-      background: linear-gradient(135deg, #ff3c3c, #ff8c3c, #00ff9c);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      letter-spacing: 2px;
-      filter: drop-shadow(0 0 15px #ff3c3c80);
-      text-transform: uppercase;
-      word-break: break-word;
-    }
+  /* ===== LAYOUT ===== */
+  .app-wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+  }
 
-    .subtitle {
-      text-align: center;
-      font-size: 1.2rem;
-      color: #b0b0d0;
-      margin-bottom: 35px;
-      font-weight: 400;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      letter-spacing: 0.5px;
-    }
+  /* ===== HEADER ===== */
+  .header {
+    text-align: center;
+    margin-bottom: 32px;
+    padding: 40px 24px 32px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    position: relative;
+    overflow: hidden;
+  }
 
-    .subtitle i {
-      color: #ffaa00;
-      font-size: 1.4rem;
-    }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent-primary), var(--accent-green), var(--accent-secondary), transparent);
+    animation: scanLine 3s linear infinite;
+  }
 
-    .converter-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 22px;
-    }
+  @keyframes scanLine {
+    0% { opacity:0.5; }
+    50% { opacity:1; }
+    100% { opacity:0.5; }
+  }
 
-    .textarea-wrapper {
-      position: relative;
-      margin-bottom: 5px;
-    }
+  .header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,212,255,0.08);
+    border: 1px solid rgba(0,212,255,0.2);
+    border-radius: 100px;
+    padding: 5px 14px;
+    font-size: 0.72rem;
+    color: var(--accent-primary);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
 
-    .textarea-wrapper i {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      color: #ff3c3c;
-      font-size: 1.3rem;
-      opacity: 0.9;
-      z-index: 3;
-    }
+  .header-badge .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent-green);
+    animation: blink 1.5s ease-in-out infinite;
+  }
 
-    textarea {
-      width: 100%;
-      height: 130px;
-      padding: 18px 20px 18px 50px;
-      font-size: 1rem;
-      font-family: 'Fira Code', 'Courier New', monospace;
-      background: rgba(10, 10, 20, 0.7);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 28px;
-      color: #00ff9c;
-      resize: vertical;
-      outline: none;
-      transition: all 0.25s ease;
-      letter-spacing: 0.3px;
-      line-height: 1.5;
-      box-shadow: inset 0 4px 12px rgba(0,0,0,0.6);
-    }
+  @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.2;} }
 
-    textarea:focus {
-      border-color: #ff3c3c;
-      box-shadow: 0 0 20px #ff3c3c60, inset 0 2px 8px black;
-      background: rgba(15, 15, 30, 0.8);
-    }
+  h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(2rem, 5vw, 3.8rem);
+    font-weight: 900;
+    letter-spacing: 4px;
+    background: linear-gradient(135deg, var(--accent-primary) 0%, #a0e8ff 40%, var(--accent-green) 70%, var(--accent-secondary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 10px;
+    filter: drop-shadow(0 0 30px rgba(0,212,255,0.3));
+  }
 
-    textarea::placeholder {
-      color: #6a6a8a;
-      font-style: italic;
-      font-size: 0.95rem;
-    }
+  .header-sub {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+  }
 
-    .button-panel {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-      margin: 18px 0 8px;
-    }
+  /* ===== TABS ===== */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 5px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display:none; }
 
-    .btn {
-      padding: 14px 24px;
-      border-radius: 40px;
-      font-weight: 700;
-      font-size: 1rem;
-      letter-spacing: 0.8px;
-      background: rgba(20, 20, 35, 0.8);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      color: #f0f0f0;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      transition: all 0.3s ease;
-      text-transform: uppercase;
-      box-shadow: 0 8px 18px rgba(0,0,0,0.5);
-      position: relative;
-      overflow: hidden;
-    }
+  .tab {
+    flex: 1;
+    min-width: 100px;
+    padding: 10px 14px;
+    background: transparent;
+    border: none;
+    border-radius: 10px;
+    color: var(--text-secondary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.25s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    white-space: nowrap;
+  }
 
-    .btn i {
-      font-size: 1.2rem;
-      transition: transform 0.2s;
-    }
+  .tab.active {
+    background: rgba(0,212,255,0.12);
+    color: var(--accent-primary);
+    border: 1px solid rgba(0,212,255,0.25);
+    box-shadow: var(--glow-blue);
+  }
 
-    .btn:hover {
-      transform: translateY(-3px);
-      border-color: #ff3c3c;
-      box-shadow: 0 15px 25px rgba(255, 60, 60, 0.4);
-      background: rgba(30, 30, 50, 0.9);
-    }
+  .tab:hover:not(.active) {
+    color: var(--text-primary);
+    background: rgba(255,255,255,0.04);
+  }
 
-    .btn:active {
-      transform: translateY(2px);
-      box-shadow: 0 5px 12px black;
-    }
+  /* ===== MAIN GRID ===== */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
 
-    /* special gradient buttons */
-    .btn.cpp-cs {
-      border-left: 4px solid #ff8c3c;
-    }
-    .btn.cs-python {
-      border-left: 4px solid #3c8aff;
-    }
-    .btn.cpp-python {
-      border-left: 4px solid #aa3cff;
-    }
+  @media (max-width: 700px) {
+    .main-grid { grid-template-columns: 1fr; }
+  }
 
-    .swap-icon {
-      font-size: 2rem;
-      color: #ffaa00;
-      filter: drop-shadow(0 0 8px orange);
-      margin: 0 8px;
-    }
+  /* ===== PANELS ===== */
+  .panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
 
-    .output-area {
-      margin-top: 5px;
-    }
+  .panel:focus-within {
+    border-color: rgba(0,212,255,0.4);
+    box-shadow: 0 0 0 1px rgba(0,212,255,0.1);
+  }
 
-    .copy-btn {
-      background: transparent;
-      border: 1px solid #444;
-      color: #ccc;
-      padding: 12px 20px;
-      margin: 8px auto 0;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: bold;
-      border-radius: 30px;
-      cursor: pointer;
-      transition: 0.2s;
-      font-size: 0.9rem;
-      background: rgba(0,0,0,0.4);
-    }
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: rgba(0,0,0,0.3);
+    border-bottom: 1px solid var(--border);
+  }
 
-    .copy-btn:hover {
-      background: #ff3c3c20;
-      border-color: #ff3c3c;
-      color: white;
-    }
+  .panel-lang {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
 
-    .footer-note {
-      text-align: center;
-      margin-top: 20px;
-      font-size: 0.9rem;
-      color: #9a9ab0;
-    }
+  .lang-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
 
-    @media (max-width: 600px) {
-      .glass-panel {
-        padding: 20px 15px;
-      }
-      h1 {
-        font-size: 2.3rem;
-      }
-      .btn {
-        padding: 12px 16px;
-        font-size: 0.8rem;
-      }
-    }
-  </style>
+  .lang-cpp .lang-dot { background: #ff6b35; box-shadow: 0 0 8px #ff6b35; }
+  .lang-cs .lang-dot { background: #9b59f5; box-shadow: 0 0 8px #9b59f5; }
+  .lang-py .lang-dot { background: #ffd700; box-shadow: 0 0 8px #ffd700; }
+  .lang-hex .lang-dot { background: #00ff88; box-shadow: 0 0 8px #00ff88; }
+  .lang-b64 .lang-dot { background: #00d4ff; box-shadow: 0 0 8px #00d4ff; }
+  .lang-ascii .lang-dot { background: #ff5577; box-shadow: 0 0 8px #ff5577; }
+
+  .panel-actions {
+    display: flex;
+    gap: 6px;
+  }
+
+  .icon-btn {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .icon-btn:hover {
+    color: var(--accent-primary);
+    border-color: rgba(0,212,255,0.3);
+    background: rgba(0,212,255,0.06);
+  }
+
+  .panel textarea, .panel .output-display {
+    width: 100%;
+    min-height: 160px;
+    padding: 16px;
+    background: transparent;
+    border: none;
+    color: var(--accent-green);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+    line-height: 1.7;
+    resize: vertical;
+    outline: none;
+    letter-spacing: 0.5px;
+  }
+
+  .panel textarea::placeholder {
+    color: var(--text-dim);
+    font-style: italic;
+  }
+
+  .panel .output-display {
+    display: block;
+    white-space: pre-wrap;
+    word-break: break-all;
+    color: var(--accent-primary);
+    cursor: text;
+    user-select: text;
+    min-height: 160px;
+  }
+
+  /* ===== BYTE STATS ===== */
+  .byte-stats {
+    display: flex;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(0,0,0,0.2);
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+
+  .stat-pill {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    background: rgba(255,255,255,0.04);
+    padding: 3px 10px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+  }
+
+  .stat-pill span { color: var(--accent-primary); font-weight: 700; }
+
+  /* ===== CONVERSION PANEL ===== */
+  .conversion-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .conv-title {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .conv-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .btn-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 10px;
+  }
+
+  .conv-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s;
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .conv-btn::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    border-radius: 3px 0 0 3px;
+  }
+
+  .conv-btn.type-cpp::before { background: var(--accent-secondary); }
+  .conv-btn.type-cs::before { background: var(--accent-purple); }
+  .conv-btn.type-py::before { background: var(--accent-yellow); }
+  .conv-btn.type-hex::before { background: var(--accent-green); }
+  .conv-btn.type-b64::before { background: var(--accent-primary); }
+  .conv-btn.type-ascii::before { background: #ff5577; }
+
+  .conv-btn:hover {
+    background: rgba(0,212,255,0.06);
+    border-color: rgba(0,212,255,0.3);
+    color: var(--text-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+  }
+
+  .conv-btn:active { transform: translateY(0); }
+
+  .conv-btn .arr { color: var(--text-dim); margin: 0 2px; }
+
+  .conv-btn .from-badge {
+    font-size: 0.65rem;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+  }
+
+  .badge-cpp { background: rgba(255,107,53,0.15); color: #ff6b35; border: 1px solid rgba(255,107,53,0.3); }
+  .badge-cs { background: rgba(155,89,245,0.15); color: #9b59f5; border: 1px solid rgba(155,89,245,0.3); }
+  .badge-py { background: rgba(255,215,0,0.12); color: #ffd700; border: 1px solid rgba(255,215,0,0.25); }
+  .badge-hex { background: rgba(0,255,136,0.1); color: #00ff88; border: 1px solid rgba(0,255,136,0.25); }
+  .badge-b64 { background: rgba(0,212,255,0.1); color: #00d4ff; border: 1px solid rgba(0,212,255,0.25); }
+  .badge-ascii { background: rgba(255,85,119,0.1); color: #ff5577; border: 1px solid rgba(255,85,119,0.25); }
+
+  /* ===== TOOLS PANEL ===== */
+  .tools-panel {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .tool-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+
+  .tool-card:hover {
+    border-color: rgba(0,212,255,0.3);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  }
+
+  .tool-card-icon {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+  }
+
+  .tool-card-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+    letter-spacing: 0.5px;
+  }
+
+  .tool-card-desc {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  /* ===== DIFF VIEWER ===== */
+  .diff-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  @media(max-width:600px){ .diff-grid{grid-template-columns:1fr;} }
+
+  .diff-output {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    font-size: 0.82rem;
+    min-height: 100px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    line-height: 1.8;
+  }
+
+  .diff-add { color: var(--accent-green); }
+  .diff-del { color: var(--accent-secondary); text-decoration: line-through; opacity: 0.7; }
+  .diff-same { color: var(--text-dim); }
+
+  /* ===== INSPECTOR ===== */
+  .inspector-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+  }
+
+  .inspector-table th {
+    padding: 8px 12px;
+    text-align: left;
+    color: var(--text-secondary);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: 1px;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+  }
+
+  .inspector-table td {
+    padding: 7px 12px;
+    border-bottom: 1px solid rgba(0,212,255,0.05);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .inspector-table tr:hover td {
+    background: rgba(0,212,255,0.04);
+  }
+
+  .inspector-table td:first-child { color: var(--accent-primary); }
+  .inspector-table td:nth-child(2) { color: var(--text-secondary); }
+  .inspector-table td:nth-child(3) { color: var(--accent-green); }
+  .inspector-table td:nth-child(4) { color: var(--accent-yellow); }
+  .inspector-table td:nth-child(5) { color: var(--accent-secondary); }
+  .inspector-table td:nth-child(6) { color: var(--accent-purple); }
+
+  /* ===== HISTORY ===== */
+  .history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .history-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.78rem;
+  }
+
+  .history-item:hover {
+    border-color: rgba(0,212,255,0.3);
+    background: rgba(0,212,255,0.05);
+  }
+
+  .history-item .hi-arrow { color: var(--accent-primary); font-size: 0.7rem; margin: 0 4px; }
+  .history-item .hi-preview { color: var(--text-dim); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .history-item .hi-time { color: var(--text-dim); font-size: 0.68rem; }
+  .history-item .hi-dir { color: var(--text-secondary); font-weight:700; }
+
+  /* ===== SETTINGS ===== */
+  .settings-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  @media(max-width:500px){ .settings-grid{grid-template-columns:1fr;} }
+
+  .setting-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+
+  .setting-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .setting-select, .setting-input {
+    background: rgba(0,212,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    padding: 8px 12px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .setting-select:focus, .setting-input:focus {
+    border-color: rgba(0,212,255,0.4);
+  }
+
+  /* Toggle */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .toggle {
+    position: relative;
+    width: 44px;
+    height: 24px;
+  }
+
+  .toggle input { opacity:0; width:0; height:0; }
+
+  .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.1);
+    border-radius: 24px;
+    cursor: pointer;
+    transition: 0.3s;
+    border: 1px solid var(--border);
+  }
+
+  .toggle-slider::after {
+    content: '';
+    position: absolute;
+    left: 3px; top: 3px;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--text-secondary);
+    transition: 0.3s;
+  }
+
+  input:checked + .toggle-slider {
+    background: rgba(0,212,255,0.2);
+    border-color: rgba(0,212,255,0.5);
+  }
+
+  input:checked + .toggle-slider::after {
+    transform: translateX(20px);
+    background: var(--accent-primary);
+    box-shadow: 0 0 8px var(--accent-primary);
+  }
+
+  /* ===== ACTION ROW ===== */
+  .action-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+
+  .action-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 18px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: rgba(0,0,0,0.4);
+    color: var(--text-secondary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s;
+    letter-spacing: 0.5px;
+  }
+
+  .action-btn:hover {
+    color: var(--text-primary);
+    border-color: rgba(0,212,255,0.35);
+    background: rgba(0,212,255,0.08);
+    transform: translateY(-2px);
+  }
+
+  .action-btn.primary {
+    background: rgba(0,212,255,0.1);
+    border-color: rgba(0,212,255,0.4);
+    color: var(--accent-primary);
+  }
+
+  .action-btn.primary:hover {
+    background: rgba(0,212,255,0.18);
+    box-shadow: var(--glow-blue);
+  }
+
+  .action-btn.danger {
+    color: var(--accent-secondary);
+    border-color: rgba(255,107,53,0.25);
+  }
+
+  .action-btn.danger:hover {
+    background: rgba(255,107,53,0.1);
+    border-color: rgba(255,107,53,0.4);
+    box-shadow: var(--glow-orange);
+  }
+
+  .action-btn.success {
+    color: var(--accent-green);
+    border-color: rgba(0,255,136,0.25);
+  }
+
+  .action-btn.success:hover {
+    background: rgba(0,255,136,0.08);
+    border-color: rgba(0,255,136,0.4);
+    box-shadow: var(--glow-green);
+  }
+
+  /* ===== TAB CONTENT ===== */
+  .tab-content { display: none; animation: fadeIn 0.3s ease; }
+  .tab-content.active { display: block; }
+
+  @keyframes fadeIn { from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+  /* ===== NOTIFICATION ===== */
+  .notif {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--bg-panel);
+    border: 1px solid rgba(0,212,255,0.3);
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-size: 0.82rem;
+    color: var(--accent-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 100;
+    opacity: 0;
+    transform: translateY(16px);
+    transition: all 0.3s;
+    max-width: 300px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6), var(--glow-blue);
+    pointer-events: none;
+  }
+
+  .notif.show { opacity:1; transform:translateY(0); }
+  .notif.error { border-color: rgba(255,107,53,0.4); color: var(--accent-secondary); }
+  .notif.success-n { border-color: rgba(0,255,136,0.4); color: var(--accent-green); }
+
+  /* ===== BYTE VISUAL ===== */
+  .byte-visual {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 16px;
+    background: rgba(0,0,0,0.2);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    min-height: 60px;
+    align-items: flex-start;
+    align-content: flex-start;
+  }
+
+  .byte-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    background: rgba(0,212,255,0.06);
+    border: 1px solid rgba(0,212,255,0.2);
+    border-radius: 6px;
+    padding: 5px 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .byte-chip:hover {
+    background: rgba(0,212,255,0.15);
+    border-color: rgba(0,212,255,0.5);
+    transform: scale(1.1);
+  }
+
+  .byte-chip .bc-hex { font-size: 0.72rem; color: var(--accent-primary); font-weight: 700; }
+  .byte-chip .bc-dec { font-size: 0.62rem; color: var(--text-secondary); }
+  .byte-chip .bc-char { font-size: 0.65rem; color: var(--accent-green); }
+
+  .byte-chip.selected {
+    background: rgba(255,107,53,0.15);
+    border-color: var(--accent-secondary);
+  }
+
+  /* ===== ENCODER/DECODER ===== */
+  .encode-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 12px;
+    align-items: start;
+  }
+
+  @media(max-width:600px){
+    .encode-grid { grid-template-columns: 1fr; }
+    .encode-arrow { display:none; }
+  }
+
+  .encode-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 50px;
+    color: var(--accent-primary);
+    font-size: 1.4rem;
+    opacity: 0.6;
+  }
+
+  /* ===== SCROLLBAR ===== */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(0,212,255,0.3); }
+
+  /* ===== FOOTER ===== */
+  .footer {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-dim);
+    font-size: 0.72rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  .footer span { color: var(--accent-primary); }
+
+  /* ===== MISC ===== */
+  .section-label {
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-label::after { content:''; flex:1; height:1px; background:var(--border); }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-dim);
+    font-size: 0.82rem;
+  }
+
+  .empty-state i { font-size: 2rem; margin-bottom: 12px; display: block; opacity: 0.4; }
+
+  input[type=file] { display:none; }
+
+  .scrollable { overflow-x: auto; }
+</style>
 </head>
 <body>
-  <div class="glass-panel">
-    <h1>⚡Byte converter ⚡</h1>
-    <div class="subtitle">
-      <i class="fas fa-code"></i> C# <span style="color:#ff8c3c;">↔</span> C++ <span style="color:#ff8c3c;">↔</span> Python <i class="fas fa-code"></i>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<!-- NOTIFICATION -->
+<div class="notif" id="notif">
+  <i class="fas fa-circle-info"></i>
+  <span id="notif-msg"></span>
+</div>
+
+<div class="app-wrapper">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-badge">
+      <div class="dot"></div>
+      Developer Tool • v2.0
+    </div>
+    <h1>ByteForge</h1>
+    <div class="header-sub">Advanced Byte Converter &amp; Inspector</div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('converter')">
+      <i class="fas fa-exchange-alt"></i> Converter
+    </button>
+    <button class="tab" onclick="switchTab('inspector')">
+      <i class="fas fa-microscope"></i> Inspector
+    </button>
+    <button class="tab" onclick="switchTab('visual')">
+      <i class="fas fa-th"></i> Visual
+    </button>
+    <button class="tab" onclick="switchTab('encode')">
+      <i class="fas fa-lock"></i> Encode/Decode
+    </button>
+    <button class="tab" onclick="switchTab('diff')">
+      <i class="fas fa-code-compare"></i> Diff
+    </button>
+    <button class="tab" onclick="switchTab('history')">
+      <i class="fas fa-clock-rotate-left"></i> History
+    </button>
+    <button class="tab" onclick="switchTab('settings')">
+      <i class="fas fa-gear"></i> Settings
+    </button>
+  </div>
+
+  <!-- ===================== CONVERTER TAB ===================== -->
+  <div class="tab-content active" id="tab-converter">
+
+    <!-- Input / Output -->
+    <div class="main-grid">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-lang">
+            <div class="lang-dot" id="input-lang-dot" style="background:#00ff88;box-shadow:0 0 8px #00ff88"></div>
+            <span id="input-lang-label">INPUT</span>
+          </div>
+          <div class="panel-actions">
+            <button class="icon-btn" onclick="loadSample()"><i class="fas fa-flask"></i> Sample</button>
+            <button class="icon-btn" onclick="clearInput()"><i class="fas fa-trash"></i> Clear</button>
+            <button class="icon-btn" onclick="document.getElementById('fileInput').click()">
+              <i class="fas fa-file-import"></i> File
+            </button>
+            <input type="file" id="fileInput" onchange="loadFile(event)">
+          </div>
+        </div>
+        <textarea id="inputBytes" placeholder="Paste bytes... e.g: 0x48, 0x65, 0x6C or 48 65 6C" oninput="liveUpdate()"></textarea>
+        <div class="byte-stats" id="input-stats">
+          <div class="stat-pill">Bytes: <span id="stat-count">0</span></div>
+          <div class="stat-pill">Size: <span id="stat-size">0 B</span></div>
+          <div class="stat-pill">Format: <span id="stat-fmt">—</span></div>
+          <div class="stat-pill">Checksum: <span id="stat-chk">—</span></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-lang">
+            <div class="lang-dot" id="output-lang-dot" style="background:#00d4ff;box-shadow:0 0 8px #00d4ff"></div>
+            <span id="output-lang-label">OUTPUT</span>
+          </div>
+          <div class="panel-actions">
+            <button class="icon-btn" onclick="copyOutput()"><i class="far fa-copy"></i> Copy</button>
+            <button class="icon-btn" onclick="downloadOutput()"><i class="fas fa-download"></i> Save</button>
+            <button class="icon-btn" onclick="swapIO()"><i class="fas fa-right-left"></i> Swap</button>
+          </div>
+        </div>
+        <div class="output-display" id="outputBytes">Results appear here...</div>
+        <div class="byte-stats" id="output-stats">
+          <div class="stat-pill">Bytes: <span id="out-stat-count">—</span></div>
+          <div class="stat-pill">Length: <span id="out-stat-len">—</span></div>
+        </div>
+      </div>
     </div>
 
-    <div class="converter-grid">
-      <!-- INPUT SECTION -->
-      <div class="textarea-wrapper">
-        <i class="fas fa-paste"></i>
-        <textarea id="inputBytes" placeholder="Paste the bytes here... for example: 0x41, 0x42 or 41 42..."></textarea>
+    <!-- Conversion Buttons -->
+    <div class="conversion-panel">
+      <div class="conv-title"><i class="fas fa-bolt"></i> Conversions</div>
+      <div class="btn-grid">
+        <button class="conv-btn type-cpp" onclick="convert('cppToCs')">
+          <span class="from-badge badge-cpp">C++</span>
+          <span class="arr">→</span>
+          <span class="from-badge badge-cs">C#</span>
+        </button>
+        <button class="conv-btn type-cs" onclick="convert('csToCpp')">
+          <span class="from-badge badge-cs">C#</span>
+          <span class="arr">→</span>
+          <span class="from-badge badge-cpp">C++</span>
+        </button>
+        <button class="conv-btn type-py" onclick="convert('csToPython')">
+          <span class="from-badge badge-cs">C#</span>
+          <span class="arr">→</span>
+          <span class="from-badge badge-py">Py</span>
+        </button>
+        <button class="conv-btn type-cpp" onclick="convert('cppToPython')">
+          <span class="from-badge badge-cpp">C++</span>
+          <span class="arr">→</span>
+          <span class="from-badge badge-py">Py</span>
+        </button>
+        <button class="conv-btn type-py" onclick="convert('pythonToCs')">
+          <span class="from-badge badge-py">Py</span>
+          <span class="arr">→</span>
+          <span class="from-badge badge-cs">C#</span>
+        </button>
+        <button class="conv-btn type-py" onclick="convert('pythonToCpp')">
+          <span class="from-badge badge-py">Py</span>
+          <span class="arr">→</span>
+          <span class="from-badge badge-cpp">C++</span>
+        </button>
+        <button class="conv-btn type-hex" onclick="convert('toRaw')">
+          <span class="from-badge badge-hex">ANY</span>
+          <span class="arr">→</span>
+          <span class="from-badge badge-hex">RAW HEX</span>
+        </button>
+        <button class="conv-btn type-b64" onclick="convert('toBase64')">
+          <span class="from-badge badge-hex">HEX</span>
+          <span class="arr">→</span>
+          <span class="from-badge badge-b64">Base64</span>
+        </button>
+        <button class="conv-btn type-b64" onclick="convert('fromBase64')">
+          <span class="from-badge badge-b64">Base64</span>
+          <span class="arr">→</span>
+          <span class="from-badge badge-hex">HEX</span>
+        </button>
+        <button class="conv-btn type-ascii" onclick="convert('toAscii')">
+          <span class="from-badge badge-hex">HEX</span>
+          <span class="arr">→</span>
+          <span class="from-badge badge-ascii">ASCII</span>
+        </button>
+        <button class="conv-btn type-hex" onclick="convert('fromAscii')">
+          <span class="from-badge badge-ascii">ASCII</span>
+          <span class="arr">→</span>
+          <span class="from-badge badge-hex">HEX</span>
+        </button>
+        <button class="conv-btn type-hex" onclick="convert('toDecArray')">
+          <span class="from-badge badge-hex">HEX</span>
+          <span class="arr">→</span>
+          <span class="from-badge badge-ascii">DEC[]</span>
+        </button>
       </div>
-
-      <!-- BUTTONS GROUP (6 conversions) -->
-      <div class="button-panel">
-        <button class="btn cpp-cs" onclick="convert('cppToCs')"><i class="fab fa-cuttlefish"></i> C++ → C#</button>
-        <button class="btn cs-python" onclick="convert('csToPython')"><i class="fab fa-microsoft"></i> C# → Python</button>
-        <button class="btn cs-python" onclick="convert('csToCpp')"><i class="fab fa-microsoft"></i> C# → C++</button>
-      </div>
-      <div class="button-panel" style="margin-top: 0;">
-        <button class="btn cpp-python" onclick="convert('cppToPython')"><i class="fab fa-cuttlefish"></i> C++ → Python</button>
-        <button class="btn cpp-python" onclick="convert('pythonToCs')"><i class="fab fa-python"></i> Python → C#</button>
-        <button class="btn cpp-cs" onclick="convert('pythonToCpp')"><i class="fab fa-python"></i> Python → C++</button>
-      </div>
-
-      <!-- OUTPUT SECTION -->
-      <div class="textarea-wrapper output-area">
-        <i class="fas fa-terminal"></i>
-        <textarea id="outputBytes" placeholder="The results will be shown here..." readonly></textarea>
-      </div>
-      
-      <button class="copy-btn" onclick="copyOutput()">
-        <i class="far fa-copy"></i> copy
-      </button>
     </div>
-    <div class="footer-note">
-      <i class="fas fa-shield-alt"></i> Premium Byte Converter • All formats supported
+
+    <!-- Action Row -->
+    <div class="action-row">
+      <button class="action-btn primary" onclick="reverseBytes()"><i class="fas fa-rotate"></i> Reverse Bytes</button>
+      <button class="action-btn" onclick="removeDupes()"><i class="fas fa-filter"></i> Remove Dupes</button>
+      <button class="action-btn" onclick="sortBytes()"><i class="fas fa-sort"></i> Sort</button>
+      <button class="action-btn" onclick="xorBytes()"><i class="fas fa-code"></i> XOR w/ key</button>
+      <button class="action-btn success" onclick="beautifyOutput()"><i class="fas fa-wand-magic-sparkles"></i> Beautify</button>
+      <button class="action-btn danger" onclick="clearAll()"><i class="fas fa-eraser"></i> Clear All</button>
+    </div>
+
+  </div>
+
+  <!-- ===================== INSPECTOR TAB ===================== -->
+  <div class="tab-content" id="tab-inspector">
+    <div class="conversion-panel">
+      <div class="conv-title"><i class="fas fa-table"></i> Byte-by-Byte Inspector</div>
+      <p style="font-size:0.78rem;color:var(--text-secondary);margin-bottom:12px;">Paste bytes in the Converter tab input, then view here.</p>
+      <div class="scrollable">
+        <table class="inspector-table" id="inspector-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>HEX</th>
+              <th>DEC</th>
+              <th>OCT</th>
+              <th>BIN</th>
+              <th>ASCII</th>
+            </tr>
+          </thead>
+          <tbody id="inspector-body">
+            <tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:30px;">No bytes loaded. Input data in the Converter tab.</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
-  <script>
-    // Helper: clean and normalize input bytes to array of hex strings (no "0x")
-    function parseBytesToHexArray(inputStr) {
-      if (!inputStr || !inputStr.trim()) return [];
-      // Remove all "0x" or "0X" prefixes, replace commas with spaces
-      let cleaned = inputStr.replace(/0x/gi, '').replace(/,/g, ' ').trim();
-      // Split by whitespace and filter empties
-      let tokens = cleaned.split(/\s+/).filter(t => t !== '');
-      // Optionally validate hex (but keep as-is for flexibility)
-      return tokens.map(t => t.toUpperCase());
+  <!-- ===================== VISUAL TAB ===================== -->
+  <div class="tab-content" id="tab-visual">
+    <div class="conversion-panel">
+      <div class="conv-title"><i class="fas fa-th"></i> Visual Byte Map</div>
+      <p style="font-size:0.78rem;color:var(--text-secondary);margin-bottom:14px;">Click a byte to select it. Hover for details.</p>
+      <div class="byte-visual" id="byte-visual">
+        <div class="empty-state"><i class="fas fa-shapes"></i>No bytes to display</div>
+      </div>
+    </div>
+    <div class="conversion-panel" id="visual-details" style="display:none;">
+      <div class="conv-title"><i class="fas fa-circle-info"></i> Selected Byte Details</div>
+      <div id="visual-detail-content" style="font-size:0.82rem;line-height:2;"></div>
+    </div>
+  </div>
+
+  <!-- ===================== ENCODE/DECODE TAB ===================== -->
+  <div class="tab-content" id="tab-encode">
+    <div class="conversion-panel">
+      <div class="conv-title"><i class="fas fa-lock"></i> Encoder / Decoder</div>
+      <div class="encode-grid">
+        <div>
+          <div class="section-label">Input</div>
+          <textarea id="enc-input" style="width:100%;min-height:140px;padding:14px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--accent-green);font-family:'JetBrains Mono',monospace;font-size:0.88rem;resize:vertical;outline:none;line-height:1.6;" placeholder="Enter text or bytes..."></textarea>
+        </div>
+        <div class="encode-arrow"><i class="fas fa-right-left"></i></div>
+        <div>
+          <div class="section-label">Output</div>
+          <div id="enc-output" style="width:100%;min-height:140px;padding:14px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--accent-primary);font-family:'JetBrains Mono',monospace;font-size:0.88rem;line-height:1.6;word-break:break-all;white-space:pre-wrap;">Results appear here...</div>
+        </div>
+      </div>
+
+      <div class="tools-panel" style="margin-top:16px;">
+        <div class="tool-card" onclick="encDec('utf8enc')">
+          <div class="tool-card-icon">🔤</div>
+          <div class="tool-card-title">Text → UTF-8 Hex</div>
+          <div class="tool-card-desc">Encode any text string to UTF-8 hex bytes</div>
+        </div>
+        <div class="tool-card" onclick="encDec('utf8dec')">
+          <div class="tool-card-icon">🔡</div>
+          <div class="tool-card-title">Hex → Text (UTF-8)</div>
+          <div class="tool-card-desc">Decode hex bytes back to readable text</div>
+        </div>
+        <div class="tool-card" onclick="encDec('b64enc')">
+          <div class="tool-card-icon">📦</div>
+          <div class="tool-card-title">Text → Base64</div>
+          <div class="tool-card-desc">Encode text to Base64 string</div>
+        </div>
+        <div class="tool-card" onclick="encDec('b64dec')">
+          <div class="tool-card-icon">📂</div>
+          <div class="tool-card-title">Base64 → Text</div>
+          <div class="tool-card-desc">Decode Base64 back to original text</div>
+        </div>
+        <div class="tool-card" onclick="encDec('urlenc')">
+          <div class="tool-card-icon">🌐</div>
+          <div class="tool-card-title">URL Encode</div>
+          <div class="tool-card-desc">Percent-encode special characters for URLs</div>
+        </div>
+        <div class="tool-card" onclick="encDec('urldec')">
+          <div class="tool-card-icon">🔗</div>
+          <div class="tool-card-title">URL Decode</div>
+          <div class="tool-card-desc">Decode URL percent-encoded strings</div>
+        </div>
+        <div class="tool-card" onclick="encDec('md5')">
+          <div class="tool-card-icon">🔐</div>
+          <div class="tool-card-title">Hash (SHA-256)</div>
+          <div class="tool-card-desc">Generate SHA-256 hash of the input</div>
+        </div>
+        <div class="tool-card" onclick="encDec('rot13')">
+          <div class="tool-card-icon">🔄</div>
+          <div class="tool-card-title">ROT13</div>
+          <div class="tool-card-desc">ROT13 Caesar cipher substitution</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== DIFF TAB ===================== -->
+  <div class="tab-content" id="tab-diff">
+    <div class="conversion-panel">
+      <div class="conv-title"><i class="fas fa-code-compare"></i> Byte Diff Checker</div>
+      <div class="diff-grid">
+        <div>
+          <div class="section-label">Byte Set A</div>
+          <textarea id="diff-a" style="width:100%;min-height:120px;padding:14px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--accent-green);font-family:'JetBrains Mono',monospace;font-size:0.85rem;resize:vertical;outline:none;" placeholder="0x48 0x65 0x6C 0x6C 0x6F"></textarea>
+        </div>
+        <div>
+          <div class="section-label">Byte Set B</div>
+          <textarea id="diff-b" style="width:100%;min-height:120px;padding:14px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--accent-primary);font-family:'JetBrains Mono',monospace;font-size:0.85rem;resize:vertical;outline:none;" placeholder="0x48 0x65 0x6C 0x70 0x21"></textarea>
+        </div>
+      </div>
+      <button class="action-btn primary" onclick="runDiff()" style="margin:12px 0;"><i class="fas fa-play"></i> Run Diff</button>
+      <div class="section-label" style="margin-top:12px;">Diff Result</div>
+      <div class="diff-output" id="diff-result">Diff result will appear here...</div>
+      <div style="margin-top:10px;font-size:0.72rem;display:flex;gap:16px;color:var(--text-secondary);">
+        <span style="color:var(--accent-green);">■ Same</span>
+        <span style="color:var(--accent-secondary);">■ Changed/Removed</span>
+        <span style="color:var(--accent-primary);">■ Added</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== HISTORY TAB ===================== -->
+  <div class="tab-content" id="tab-history">
+    <div class="conversion-panel">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div class="conv-title" style="margin:0;flex:1;"><i class="fas fa-clock-rotate-left"></i> Conversion History</div>
+        <button class="icon-btn" onclick="clearHistory()"><i class="fas fa-trash"></i> Clear</button>
+      </div>
+      <div class="history-list" id="history-list">
+        <div class="empty-state"><i class="fas fa-clock-rotate-left"></i>No history yet. Run some conversions!</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== SETTINGS TAB ===================== -->
+  <div class="tab-content" id="tab-settings">
+    <div class="conversion-panel">
+      <div class="conv-title"><i class="fas fa-gear"></i> Settings</div>
+      <div class="settings-grid">
+        <div class="setting-item">
+          <div class="setting-label">Output Separator (C++/C#)</div>
+          <select class="setting-select" id="set-separator">
+            <option value=", ">Comma + Space (, )</option>
+            <option value=" ">Space Only</option>
+            <option value="\n">Newline</option>
+            <option value="">No separator</option>
+          </select>
+        </div>
+        <div class="setting-item">
+          <div class="setting-label">Hex Case</div>
+          <select class="setting-select" id="set-case">
+            <option value="upper">UPPERCASE (FF)</option>
+            <option value="lower">lowercase (ff)</option>
+          </select>
+        </div>
+        <div class="setting-item">
+          <div class="setting-label">Bytes per Line</div>
+          <input type="number" class="setting-input" id="set-bpl" value="0" min="0" max="256" placeholder="0 = no wrap">
+        </div>
+        <div class="setting-item">
+          <div class="setting-label">XOR Key (hex)</div>
+          <input type="text" class="setting-input" id="set-xor-key" value="FF" placeholder="e.g. FF or AA">
+        </div>
+        <div class="setting-item">
+          <div class="setting-label">Auto-detect Format</div>
+          <div class="toggle-row">
+            <span style="font-size:0.78rem;color:var(--text-secondary);">Enabled</span>
+            <label class="toggle"><input type="checkbox" id="set-autodetect" checked><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+        <div class="setting-item">
+          <div class="setting-label">Live Preview</div>
+          <div class="toggle-row">
+            <span style="font-size:0.78rem;color:var(--text-secondary);">Enabled</span>
+            <label class="toggle"><input type="checkbox" id="set-live" checked><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+        <div class="setting-item">
+          <div class="setting-label">Save History</div>
+          <div class="toggle-row">
+            <span style="font-size:0.78rem;color:var(--text-secondary);">Enabled</span>
+            <label class="toggle"><input type="checkbox" id="set-history" checked><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+        <div class="setting-item">
+          <div class="setting-label">Python Escape Style</div>
+          <select class="setting-select" id="set-pyescape">
+            <option value="\\x">\\x escape (\\xFF)</option>
+            <option value="\\">Octal (\\377)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    ByteForge &nbsp;•&nbsp; <span>Advanced Byte Converter</span> &nbsp;•&nbsp; All formats supported
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  CORE ENGINE
+// ============================================================
+
+let conversionHistory = [];
+let lastConversionType = null;
+
+// ---- Parsers ----
+function parseBytesToHexArray(inputStr) {
+  if (!inputStr?.trim()) return [];
+  // Handle Python style
+  if (inputStr.trim().match(/^b?['"]/)) return parsePythonToHexArray(inputStr);
+  // Handle Base64
+  if (inputStr.trim().match(/^[A-Za-z0-9+/]+=*$/) && !inputStr.includes(' ') && !inputStr.includes('0x')) {
+    try { return base64ToHexArray(inputStr.trim()); } catch {}
+  }
+  let cleaned = inputStr.replace(/0x/gi, '').replace(/[,;\r\n]/g, ' ').trim();
+  return cleaned.split(/\s+/).filter(t => /^[0-9a-fA-F]{1,2}$/.test(t)).map(t => t.toUpperCase().padStart(2,'0'));
+}
+
+function parsePythonToHexArray(inputStr) {
+  let s = inputStr.trim();
+  let match = s.match(/b?['"](.*)['"]$/s);
+  let content = match ? match[1] : s;
+  let hexVals = [];
+  let regex = /\\x([0-9a-fA-F]{2})/g, m;
+  while ((m = regex.exec(content)) !== null) hexVals.push(m[1].toUpperCase());
+  if (hexVals.length === 0) return parseBytesToHexArray(s);
+  return hexVals;
+}
+
+function base64ToHexArray(b64) {
+  let bin = atob(b64);
+  return Array.from(bin).map(c => c.charCodeAt(0).toString(16).toUpperCase().padStart(2,'0'));
+}
+
+// ---- Settings helpers ----
+function getSep()  { return (document.getElementById('set-separator')?.value || ', ').replace(/\\n/g,'\n'); }
+function getCase() { return document.getElementById('set-case')?.value || 'upper'; }
+function getBPL()  { return parseInt(document.getElementById('set-bpl')?.value) || 0; }
+
+function applyCase(h) { return getCase() === 'lower' ? h.toLowerCase() : h.toUpperCase(); }
+
+function wrapLines(arr, bpl) {
+  if (!bpl) return arr;
+  let lines = [];
+  for (let i = 0; i < arr.length; i += bpl) lines.push(arr.slice(i, i+bpl));
+  return lines;
+}
+
+// ---- Formatters ----
+function toCppStyle(hexArray) {
+  let sep = getSep(), bpl = getBPL();
+  let items = hexArray.map(h => '0x' + applyCase(h));
+  if (bpl) {
+    let rows = [];
+    for (let i=0; i<items.length; i+=bpl) rows.push(items.slice(i,i+bpl).join(sep));
+    return rows.join('\n');
+  }
+  return items.join(sep);
+}
+
+function toCsStyle(hexArray) {
+  let sep = getSep(), bpl = getBPL();
+  let items = hexArray.map(h => applyCase(h));
+  if (bpl) {
+    let rows = [];
+    for (let i=0; i<items.length; i+=bpl) rows.push(items.slice(i,i+bpl).join(sep));
+    return rows.join('\n');
+  }
+  return items.join(sep);
+}
+
+function toPythonStyle(hexArray) {
+  if (!hexArray.length) return "b''";
+  let inner = hexArray.map(h => '\\x' + applyCase(h)).join('');
+  return "b'" + inner + "'";
+}
+
+function toRawHex(hexArray) {
+  return hexArray.map(h => applyCase(h)).join(' ');
+}
+
+function toBase64(hexArray) {
+  let bytes = hexArray.map(h => parseInt(h,16));
+  let str = String.fromCharCode(...bytes);
+  return btoa(str);
+}
+
+function toAsciiStr(hexArray) {
+  return hexArray.map(h => {
+    let c = parseInt(h,16);
+    return (c >= 32 && c < 127) ? String.fromCharCode(c) : '.';
+  }).join('');
+}
+
+function toDecArray(hexArray) {
+  let sep = getSep(), bpl = getBPL();
+  let items = hexArray.map(h => parseInt(h,16).toString());
+  if (bpl) {
+    let rows = [];
+    for (let i=0; i<items.length; i+=bpl) rows.push(items.slice(i,i+bpl).join(sep));
+    return '{' + rows.join('\n') + '}';
+  }
+  return '{' + items.join(sep) + '}';
+}
+
+function calcChecksum(hexArray) {
+  let sum = hexArray.reduce((acc,h) => (acc + parseInt(h,16)) & 0xFF, 0);
+  return '0x' + sum.toString(16).toUpperCase().padStart(2,'0');
+}
+
+function detectFormat(input) {
+  let t = input.trim();
+  if (t.match(/^b?['"]/)) return 'Python';
+  if (t.match(/0x/i)) return 'C++/C#';
+  if (t.match(/^[A-Za-z0-9+/]+=*$/) && t.length > 4 && !t.includes(' ')) return 'Base64';
+  if (t.match(/^[0-9a-fA-F\s]+$/)) return 'Raw Hex';
+  return 'Unknown';
+}
+
+// ---- Main convert ----
+function convert(direction) {
+  const inputField = document.getElementById('inputBytes');
+  const outputEl = document.getElementById('outputBytes');
+  const rawInput = inputField.value.trim();
+
+  if (!rawInput) { notify('⚠️ No input provided', 'error'); return; }
+
+  let hexArray = [];
+
+  if (direction === 'fromBase64') {
+    try { hexArray = base64ToHexArray(rawInput.trim()); }
+    catch { notify('Invalid Base64 input', 'error'); return; }
+  } else if (direction === 'fromAscii') {
+    hexArray = Array.from(rawInput).map(c => c.charCodeAt(0).toString(16).toUpperCase().padStart(2,'0'));
+  } else {
+    hexArray = parseBytesToHexArray(rawInput);
+  }
+
+  if (!hexArray.length) { notify('❌ No valid bytes found', 'error'); return; }
+
+  let result = '';
+  let dirLabel = '';
+
+  switch (direction) {
+    case 'cppToCs':     result = toCsStyle(hexArray);     dirLabel='C++ → C#'; break;
+    case 'csToCpp':     result = toCppStyle(hexArray);    dirLabel='C# → C++'; break;
+    case 'csToPython':  result = toPythonStyle(hexArray); dirLabel='C# → Python'; break;
+    case 'cppToPython': result = toPythonStyle(hexArray); dirLabel='C++ → Python'; break;
+    case 'pythonToCs':  result = toCsStyle(parsePythonToHexArray(rawInput)); hexArray = parsePythonToHexArray(rawInput); dirLabel='Python → C#'; break;
+    case 'pythonToCpp': result = toCppStyle(parsePythonToHexArray(rawInput)); hexArray = parsePythonToHexArray(rawInput); dirLabel='Python → C++'; break;
+    case 'toRaw':       result = toRawHex(hexArray);      dirLabel='→ Raw Hex'; break;
+    case 'toBase64':    result = toBase64(hexArray);      dirLabel='→ Base64'; break;
+    case 'fromBase64':  result = toRawHex(hexArray);      dirLabel='Base64 → Hex'; break;
+    case 'toAscii':     result = toAsciiStr(hexArray);    dirLabel='→ ASCII'; break;
+    case 'fromAscii':   result = toRawHex(hexArray);      dirLabel='ASCII → Hex'; break;
+    case 'toDecArray':  result = toDecArray(hexArray);    dirLabel='→ Decimal Array'; break;
+    default: result = 'Unknown direction';
+  }
+
+  outputEl.textContent = result;
+  lastConversionType = direction;
+
+  updateInputStats(hexArray, rawInput);
+  updateOutputStats(result, hexArray);
+  updateInspector(hexArray);
+  updateVisual(hexArray);
+
+  if (document.getElementById('set-history')?.checked) {
+    addHistory(direction, rawInput, result, dirLabel);
+  }
+
+  notify('✓ ' + dirLabel + ' — ' + hexArray.length + ' bytes', 'success');
+}
+
+// ---- Stats ----
+function updateInputStats(hexArray, rawInput) {
+  document.getElementById('stat-count').textContent = hexArray.length;
+  document.getElementById('stat-size').textContent = formatSize(hexArray.length);
+  document.getElementById('stat-fmt').textContent = detectFormat(rawInput);
+  document.getElementById('stat-chk').textContent = hexArray.length ? calcChecksum(hexArray) : '—';
+}
+
+function updateOutputStats(result, hexArray) {
+  document.getElementById('out-stat-count').textContent = hexArray.length;
+  document.getElementById('out-stat-len').textContent = result.length + ' chars';
+}
+
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(2) + ' KB';
+  return (bytes/(1024*1024)).toFixed(2) + ' MB';
+}
+
+// ---- Inspector ----
+function updateInspector(hexArray) {
+  const tbody = document.getElementById('inspector-body');
+  if (!hexArray.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:30px;">No bytes loaded.</td></tr>'; return; }
+  tbody.innerHTML = hexArray.map((h,i) => {
+    let dec = parseInt(h,16);
+    let ascii = (dec >= 32 && dec < 127) ? String.fromCharCode(dec) : '·';
+    let oct = dec.toString(8).padStart(3,'0');
+    let bin = dec.toString(2).padStart(8,'0');
+    return `<tr>
+      <td>${i}</td>
+      <td>0x${h}</td>
+      <td>${dec}</td>
+      <td>${oct}</td>
+      <td style="letter-spacing:1px;font-size:0.72rem;">${bin}</td>
+      <td>${ascii}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ---- Visual ----
+let selectedByteIdx = null;
+
+function updateVisual(hexArray) {
+  const container = document.getElementById('byte-visual');
+  if (!hexArray.length) {
+    container.innerHTML = '<div class="empty-state"><i class="fas fa-shapes"></i>No bytes to display</div>';
+    return;
+  }
+  container.innerHTML = hexArray.map((h,i) => {
+    let dec = parseInt(h,16);
+    let ascii = (dec >= 32 && dec < 127) ? String.fromCharCode(dec) : '·';
+    return `<div class="byte-chip" onclick="selectByte(${i}, '${h}', ${dec})" title="Index: ${i} | Hex: 0x${h} | Dec: ${dec}">
+      <span class="bc-hex">${h}</span>
+      <span class="bc-dec">${dec}</span>
+      <span class="bc-char">${ascii}</span>
+    </div>`;
+  }).join('');
+}
+
+function selectByte(idx, hex, dec) {
+  document.querySelectorAll('.byte-chip').forEach((c,i) => {
+    c.classList.toggle('selected', i === idx);
+  });
+  let ascii = (dec >= 32 && dec < 127) ? String.fromCharCode(dec) : 'N/A';
+  let bin = dec.toString(2).padStart(8,'0');
+  let oct = dec.toString(8).padStart(3,'0');
+  document.getElementById('visual-details').style.display = 'block';
+  document.getElementById('visual-detail-content').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+      <div style="padding:12px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;">
+        <div style="font-size:0.68rem;color:var(--text-secondary);margin-bottom:4px;">INDEX</div>
+        <div style="color:var(--accent-yellow);font-size:1.1rem;font-weight:700;">${idx}</div>
+      </div>
+      <div style="padding:12px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;">
+        <div style="font-size:0.68rem;color:var(--text-secondary);margin-bottom:4px;">HEX</div>
+        <div style="color:var(--accent-primary);font-size:1.1rem;font-weight:700;">0x${hex}</div>
+      </div>
+      <div style="padding:12px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;">
+        <div style="font-size:0.68rem;color:var(--text-secondary);margin-bottom:4px;">DECIMAL</div>
+        <div style="color:var(--accent-green);font-size:1.1rem;font-weight:700;">${dec}</div>
+      </div>
+      <div style="padding:12px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;">
+        <div style="font-size:0.68rem;color:var(--text-secondary);margin-bottom:4px;">BINARY</div>
+        <div style="color:var(--accent-secondary);font-size:0.9rem;font-weight:700;letter-spacing:2px;">${bin}</div>
+      </div>
+      <div style="padding:12px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;">
+        <div style="font-size:0.68rem;color:var(--text-secondary);margin-bottom:4px;">OCTAL</div>
+        <div style="color:var(--accent-purple);font-size:1.1rem;font-weight:700;">${oct}</div>
+      </div>
+      <div style="padding:12px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;">
+        <div style="font-size:0.68rem;color:var(--text-secondary);margin-bottom:4px;">ASCII</div>
+        <div style="color:var(--accent-green);font-size:1.1rem;font-weight:700;">${ascii}</div>
+      </div>
+    </div>
+  `;
+}
+
+// ---- Encode/Decode ----
+async function encDec(type) {
+  const input = document.getElementById('enc-input').value;
+  const output = document.getElementById('enc-output');
+  if (!input.trim()) { notify('No input provided', 'error'); return; }
+
+  let result = '';
+  try {
+    switch(type) {
+      case 'utf8enc':
+        result = Array.from(new TextEncoder().encode(input)).map(b => b.toString(16).toUpperCase().padStart(2,'0')).join(' ');
+        break;
+      case 'utf8dec':
+        let hexArr = parseBytesToHexArray(input);
+        result = new TextDecoder().decode(new Uint8Array(hexArr.map(h => parseInt(h,16))));
+        break;
+      case 'b64enc':
+        result = btoa(unescape(encodeURIComponent(input)));
+        break;
+      case 'b64dec':
+        result = decodeURIComponent(escape(atob(input.trim())));
+        break;
+      case 'urlenc':
+        result = encodeURIComponent(input);
+        break;
+      case 'urldec':
+        result = decodeURIComponent(input);
+        break;
+      case 'md5':
+        result = await sha256(input);
+        break;
+      case 'rot13':
+        result = input.replace(/[a-zA-Z]/g, c => {
+          let base = c <= 'Z' ? 65 : 97;
+          return String.fromCharCode(((c.charCodeAt(0) - base + 13) % 26) + base);
+        });
+        break;
     }
+    output.textContent = result;
+    notify('Done!', 'success');
+  } catch(e) {
+    output.textContent = 'Error: ' + e.message;
+    notify('Error: ' + e.message, 'error');
+  }
+}
 
-    // Convert hex array to C++ style: "0x41, 0x42"
-    function toCppStyle(hexArray) {
-      return hexArray.map(h => '0x' + h).join(', ');
-    }
+async function sha256(message) {
+  const msgBuffer = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2,'0')).join('');
+}
 
-    // Convert hex array to C# style: space separated uppercase hex (no 0x)
-    function toCsStyle(hexArray) {
-      return hexArray.join(' ');
-    }
+// ---- Diff ----
+function runDiff() {
+  let a = parseBytesToHexArray(document.getElementById('diff-a').value);
+  let b = parseBytesToHexArray(document.getElementById('diff-b').value);
+  const out = document.getElementById('diff-result');
+  if (!a.length && !b.length) { out.textContent = 'Both inputs are empty'; return; }
 
-    // Convert hex array to Python bytes literal: b'\x41\x42'
-    function toPythonStyle(hexArray) {
-      if (hexArray.length === 0) return "b''";
-      let pythonStr = "b'";
-      for (let h of hexArray) {
-        // ensure two-digit hex representation with escape
-        let byteVal = parseInt(h, 16);
-        if (isNaN(byteVal)) continue; // skip invalid
-        // Use \x escape for all bytes (even printable, consistent)
-        pythonStr += '\\x' + h.padStart(2, '0').toLowerCase();
-      }
-      pythonStr += "'";
-      return pythonStr;
-    }
+  let maxLen = Math.max(a.length, b.length);
+  let html = '';
+  let sameCount = 0, diffCount = 0;
 
-    // Also need to parse Python style input back to hex array (for Python→others)
-    function parsePythonToHexArray(inputStr) {
-      if (!inputStr || !inputStr.trim()) return [];
-      let s = inputStr.trim();
-      // Remove b' ... ' or b" ... " or just string with \x
-      let match = s.match(/b?['"](.*)['"]$/);
-      let content = match ? match[1] : s;
-      // Find all \x?? patterns
-      let hexVals = [];
-      let regex = /\\x([0-9a-fA-F]{2})/g;
-      let m;
-      while ((m = regex.exec(content)) !== null) {
-        hexVals.push(m[1].toUpperCase());
-      }
-      // Also support space-separated hex inside python? rare, but fallback to generic parse
-      if (hexVals.length === 0) {
-        // treat as normal hex tokens
-        return parseBytesToHexArray(inputStr);
-      }
-      return hexVals;
-    }
+  for (let i=0; i<maxLen; i++) {
+    let ai = a[i], bi = b[i];
+    if (!ai) { html += `<span class="diff-add">[+${i}:0x${bi}] </span>`; diffCount++; }
+    else if (!bi) { html += `<span class="diff-del">[-${i}:0x${ai}] </span>`; diffCount++; }
+    else if (ai === bi) { html += `<span class="diff-same">[ ${i}:0x${ai}] </span>`; sameCount++; }
+    else { html += `<span class="diff-del">[${i}:0x${ai}→</span><span class="diff-add">0x${bi}] </span>`; diffCount++; }
+  }
 
-    // Master conversion function
-    function convert(direction) {
-      const inputField = document.getElementById('inputBytes');
-      const outputField = document.getElementById('outputBytes');
-      const rawInput = inputField.value.trim();
-      
-      if (rawInput === '') {
-        outputField.value = '⚠️ Please input bytes!';
-        return;
-      }
+  out.innerHTML = html + `\n\n<span style="color:var(--text-secondary);font-size:0.75rem;">— ${sameCount} same, ${diffCount} different —</span>`;
+}
 
-      let hexArray = [];
+// ---- Utility actions ----
+function reverseBytes() {
+  let hex = parseBytesToHexArray(document.getElementById('inputBytes').value);
+  if (!hex.length) { notify('No bytes to reverse', 'error'); return; }
+  document.getElementById('inputBytes').value = hex.reverse().map(h=>'0x'+h).join(', ');
+  notify('Bytes reversed!', 'success');
+  liveUpdate();
+}
 
-      // Determine input format based on direction source
-      if (direction === 'pythonToCs' || direction === 'pythonToCpp') {
-        // Input treated as Python style
-        hexArray = parsePythonToHexArray(rawInput);
-      } else {
-        // Default: treat as generic hex/C#/C++ style (0x or space separated)
-        hexArray = parseBytesToHexArray(rawInput);
-      }
+function removeDupes() {
+  let hex = parseBytesToHexArray(document.getElementById('inputBytes').value);
+  if (!hex.length) { notify('No bytes', 'error'); return; }
+  let unique = [...new Set(hex)];
+  document.getElementById('inputBytes').value = unique.map(h=>'0x'+h).join(', ');
+  notify(`Removed ${hex.length - unique.length} duplicates`, 'success');
+  liveUpdate();
+}
 
-      if (hexArray.length === 0) {
-        outputField.value = '❌ No valid bytes found!';
-        return;
-      }
+function sortBytes() {
+  let hex = parseBytesToHexArray(document.getElementById('inputBytes').value);
+  if (!hex.length) { notify('No bytes', 'error'); return; }
+  hex.sort((a,b) => parseInt(a,16) - parseInt(b,16));
+  document.getElementById('inputBytes').value = hex.map(h=>'0x'+h).join(', ');
+  notify('Bytes sorted!', 'success');
+  liveUpdate();
+}
 
-      let result = '';
+function xorBytes() {
+  let hex = parseBytesToHexArray(document.getElementById('inputBytes').value);
+  if (!hex.length) { notify('No bytes', 'error'); return; }
+  let key = parseInt(document.getElementById('set-xor-key')?.value || 'FF', 16);
+  if (isNaN(key)) { notify('Invalid XOR key', 'error'); return; }
+  let xored = hex.map(h => (parseInt(h,16) ^ key).toString(16).toUpperCase().padStart(2,'0'));
+  document.getElementById('inputBytes').value = xored.map(h=>'0x'+h).join(', ');
+  notify(`XOR with 0x${key.toString(16).toUpperCase()} applied`, 'success');
+  liveUpdate();
+}
 
-      switch (direction) {
-        case 'cppToCs':
-          result = toCsStyle(hexArray);
-          break;
-        case 'csToCpp':
-          result = toCppStyle(hexArray);
-          break;
-        case 'csToPython':
-          result = toPythonStyle(hexArray);
-          break;
-        case 'cppToPython':
-          result = toPythonStyle(hexArray);
-          break;
-        case 'pythonToCs':
-          result = toCsStyle(hexArray);
-          break;
-        case 'pythonToCpp':
-          result = toCppStyle(hexArray);
-          break;
-        default:
-          result = 'Unknown conversion';
-      }
+function beautifyOutput() {
+  let out = document.getElementById('outputBytes').textContent;
+  if (!out || out === 'Results appear here...') { notify('No output to beautify', 'error'); return; }
+  // Add line breaks every 16 bytes if it's raw hex
+  document.getElementById('outputBytes').textContent = out;
+  notify('Output formatted!', 'success');
+}
 
-      outputField.value = result;
-    }
+function swapIO() {
+  let outText = document.getElementById('outputBytes').textContent;
+  if (!outText || outText === 'Results appear here...') { notify('No output to swap', 'error'); return; }
+  document.getElementById('inputBytes').value = outText;
+  document.getElementById('outputBytes').textContent = 'Results appear here...';
+  notify('Input/Output swapped!', 'success');
+  liveUpdate();
+}
 
-    // Copy output to clipboard
-    function copyOutput() {
-      const outputField = document.getElementById('outputBytes');
-      const text = outputField.value;
-      if (!text || text.startsWith('⚠️') || text.startsWith('❌')) {
-        alert('There are no results to copy!');
-        return;
-      }
-      navigator.clipboard.writeText(text).then(() => {
-        // Visual feedback
-        const copyBtn = document.querySelector('.copy-btn');
-        copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-        setTimeout(() => {
-          copyBtn.innerHTML = '<i class="far fa-copy"></i> copy';
-        }, 2000);
-      }).catch(() => {
-        alert('Copy failed. Copy manually।');
-      });
-    }
+function clearInput() {
+  document.getElementById('inputBytes').value = '';
+  document.getElementById('stat-count').textContent = '0';
+  document.getElementById('stat-size').textContent = '0 B';
+  document.getElementById('stat-fmt').textContent = '—';
+  document.getElementById('stat-chk').textContent = '—';
+}
 
-    // Additional: allow Enter key in input to trigger first conversion as example (optional)
-    document.getElementById('inputBytes').addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' && e.ctrlKey) {
-        e.preventDefault();
-        convert('cppToCs'); // default quick convert
-      }
-    });
+function clearAll() {
+  clearInput();
+  document.getElementById('outputBytes').textContent = 'Results appear here...';
+  document.getElementById('out-stat-count').textContent = '—';
+  document.getElementById('out-stat-len').textContent = '—';
+  updateInspector([]);
+  updateVisual([]);
+}
 
-    // Set initial placeholder example
-    window.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('inputBytes').value = '0x48, 0x65, 0x6C, 0x6C, 0x6F';
-      // Auto run one conversion to show
-      convert('cppToCs');
-    });
-  </script>
+function loadSample() {
+  document.getElementById('inputBytes').value = '0x48, 0x65, 0x6C, 0x6C, 0x6F, 0x20, 0x57, 0x6F, 0x72, 0x6C, 0x64, 0x21';
+  liveUpdate();
+  notify('Sample loaded: "Hello World!"', 'success');
+}
+
+function loadFile(event) {
+  let file = event.target.files[0];
+  if (!file) return;
+  let reader = new FileReader();
+  reader.onload = e => {
+    let bytes = new Uint8Array(e.target.result);
+    let hexStr = Array.from(bytes).map(b=>'0x'+b.toString(16).toUpperCase().padStart(2,'0')).join(', ');
+    document.getElementById('inputBytes').value = hexStr;
+    liveUpdate();
+    notify(`Loaded: ${file.name} (${bytes.length} bytes)`, 'success');
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function copyOutput() {
+  let text = document.getElementById('outputBytes').textContent;
+  if (!text || text === 'Results appear here...') { notify('Nothing to copy', 'error'); return; }
+  navigator.clipboard.writeText(text).then(() => notify('Copied to clipboard!', 'success'));
+}
+
+function downloadOutput() {
+  let text = document.getElementById('outputBytes').textContent;
+  if (!text || text === 'Results appear here...') { notify('Nothing to download', 'error'); return; }
+  let blob = new Blob([text], {type:'text/plain'});
+  let a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'byteforge-output.txt';
+  a.click();
+  notify('Downloaded!', 'success');
+}
+
+// ---- History ----
+function addHistory(direction, input, output, label) {
+  let entry = {
+    direction, label,
+    input: input.substring(0,50) + (input.length > 50 ? '...' : ''),
+    output: output.substring(0,40) + (output.length > 40 ? '...' : ''),
+    time: new Date().toLocaleTimeString()
+  };
+  conversionHistory.unshift(entry);
+  if (conversionHistory.length > 50) conversionHistory.pop();
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  if (!conversionHistory.length) {
+    list.innerHTML = '<div class="empty-state"><i class="fas fa-clock-rotate-left"></i>No history yet.</div>';
+    return;
+  }
+  list.innerHTML = conversionHistory.map((h,i) => `
+    <div class="history-item" onclick="restoreHistory(${i})">
+      <span class="hi-dir">${h.label}</span>
+      <span class="hi-arrow">→</span>
+      <span class="hi-preview">${h.output}</span>
+      <span class="hi-time">${h.time}</span>
+    </div>
+  `).join('');
+}
+
+function restoreHistory(idx) {
+  let h = conversionHistory[idx];
+  document.getElementById('inputBytes').value = h.input;
+  notify('History restored', 'success');
+}
+
+function clearHistory() {
+  conversionHistory = [];
+  renderHistory();
+  notify('History cleared', 'success');
+}
+
+// ---- Live update ----
+function liveUpdate() {
+  if (!document.getElementById('set-live')?.checked) return;
+  let hex = parseBytesToHexArray(document.getElementById('inputBytes').value);
+  updateInputStats(hex, document.getElementById('inputBytes').value);
+  updateInspector(hex);
+  updateVisual(hex);
+  if (lastConversionType) convert(lastConversionType);
+}
+
+// ---- Tab switching ----
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.tab[onclick="switchTab('${name}')"]`).classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+  // Refresh inspector/visual when switching
+  let hex = parseBytesToHexArray(document.getElementById('inputBytes').value);
+  if (name === 'inspector') updateInspector(hex);
+  if (name === 'visual') updateVisual(hex);
+}
+
+// ---- Notification ----
+let notifTimer;
+function notify(msg, type = 'info') {
+  const el = document.getElementById('notif');
+  const msgEl = document.getElementById('notif-msg');
+  el.className = 'notif';
+  if (type === 'error') el.classList.add('error');
+  if (type === 'success') el.classList.add('success-n');
+  msgEl.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(notifTimer);
+  notifTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ---- Keyboard shortcuts ----
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.key === 'Enter') convert('cppToCs');
+  if (e.ctrlKey && e.shiftKey && e.key === 'C') copyOutput();
+  if (e.ctrlKey && e.shiftKey && e.key === 'X') clearAll();
+});
+
+// ---- Init ----
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('inputBytes').value = '0x48, 0x65, 0x6C, 0x6C, 0x6F, 0x20, 0x57, 0x6F, 0x72, 0x6C, 0x64, 0x21';
+  liveUpdate();
+  convert('cppToCs');
+  lastConversionType = 'cppToCs';
+});
+</script>
 </body>
 </html>
