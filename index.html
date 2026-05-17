@@ -1305,14 +1305,16 @@ function toCppStyle(hexArray) {
 }
 
 function toCsStyle(hexArray) {
-  let sep = getSep(), bpl = getBPL();
-  let items = hexArray.map(h => applyCase(h));
+  // C# format: uppercase hex, space-separated, no 0x prefix
+  // e.g. "3F 00 00 80 3E 00"
+  let bpl = getBPL();
+  let items = hexArray.map(h => h.toUpperCase().padStart(2,'0'));
   if (bpl) {
     let rows = [];
-    for (let i=0; i<items.length; i+=bpl) rows.push(items.slice(i,i+bpl).join(sep));
+    for (let i=0; i<items.length; i+=bpl) rows.push(items.slice(i,i+bpl).join(' '));
     return rows.join('\n');
   }
-  return items.join(sep);
+  return items.join(' ');
 }
 
 function toPythonStyle(hexArray) {
